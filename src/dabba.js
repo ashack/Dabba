@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 */
-(function(context){
+(function (context) {
 
 //create the empty object if already not available
 var Dabba = {} || window.Dabba;
@@ -28,75 +28,84 @@ var Dabba = {} || window.Dabba;
 // overwriting any other Dabba object with this object
 window.Dabba = Dabba;
 
-var wls = window.localStorage;
+var _wls = window.localStorage;
 //TODO
 Dabba.adapter = {
 
-	storage: 'dom';//
-}
+    storage: 'dom'//
+};
 
  //
-var cache = {}; // useful for caching objects
+var cache = {}, // useful for caching objects
 
 //TODO 
 //check if localStorage is available
-var isLocalStorage = function(){
+ isLocalStorage = function () {
 	//function supports_html5_storage() {
 	// taken from modernizer https://github.com/Modernizr/Modernizr/blob/master/feature-detects/storage-localstorage.js
   try {
       localStorage.setItem('mod', 'mod');
       localStorage.removeItem('mod');
       return true;
-  } catch(e) {
+  } catch (e) {
       return false;
   }
 }
 
 // creates the new corner using the create method
-var init = function(name, keys) {
+var _init = function(name/*name of the corner*/, keys/* name of the columns*/) {
 		// check if localstorage is available
 		if(!isLocalStorage()) {
-
-			console.log("local storage is not available.") 
+			// TO DO
+			console.log("local storage is not available.") // need to check if console is available
 			return; // object cannot be created hence no need to go further
 		}
 			
 
 		// check if a key with same name exists
-		if(localStorage.getItem(name) != undefined) {
+		/*if(!(_wls.getItem(name))) {
 
 			var sd = new ls(name);
 			return sd;// since same key exists , there is no need to go further
-		}
-			
+		}*/
+		
+		// if some other script creates any item with provided key
+		if (!(_wls.getItem(name))) {// if the key is not found 
+			_create(name, keys);
+		} else {
+			//raise exception;
+		};	
+		
+	};
 
-		var sd = new ls(name),
-		tv1 = name + ".totalrecords"/* this will keep a tab on how many rows of data is set*/
-		,tv2 = name + ".keys"
-		,tv3 = name + ".ids";
-		localStorage.setItem(tv1, '0');
-		localStorage.setItem(tv3, '0');
+var _create = function (name/*name of the corner*/, keys/* name of the columns*/) {
+
+	var sd = new ls(name)
+		,tmpVal1 = sd.name + ".totalrecords"/* this will keep a tab on how many rows of data is set*/
+		,tmpVal2 = sd.name + ".keys"
+		,tmpVal3 = sd.name + ".ids";
+		localStorage.setItem(tmpVal1, '0');
+		localStorage.setItem(tmpVal3, '0');
 		keys.id = "number";
 		keys.create_date = "datetime";
 		keys.update_date = "datetime";
-		wls.setItem(tv2, JSON.stringify(keys));
+		wls.setItem(tmpVal2, JSON.stringify(keys));
 		return sd;
-	};
-
-
-var ls = function (name/*string*/) {
-		var name = name;
-		if(wls.getItem(name) == undefined) {
-
-			wls.setItem(name,getUID());
+}
+var _ls = function (name/*string*/) {
+		var _name = name;
+		//if(_wls.getItem(_name) !== undefined) {
+			//this.uid = wls.getItem(_name);
+			this.name = _name;
 			//
-		} 
+		//} else {
+			// raise exception
+		//} 
+		_wls.setItem(_name,getUID());
 			
-		this.uid = wls.getItem(name);
-		this.name = name;	
 }
 
-ls.prototype.add = function(data) {
+_ls.prototype.add = function(data) {
 	var i = parseInt(wls.getItem(this.name + ".ids"),10);
 	//data.id = ++i;
 	var trs = parseInt(wls.getItem(this.name + ".totalrecords"));
@@ -115,7 +124,7 @@ ls.prototype.add = function(data) {
 };
 
 //TODO
-ls.prototype.edit = function(id/* number*/, data/*key: value, key:value*/) {
+_ls.prototype.edit = function(id/* number*/, data/*{key: value, key:value}*/) {
 	var idn = this.name +'.'+ id;
 	var item = this.find(id);//this{};
 	if(item != null) {
@@ -129,7 +138,7 @@ ls.prototype.edit = function(id/* number*/, data/*key: value, key:value*/) {
 	}
 };
 
-ls.prototype.find = function(id/* number*/) {
+_ls.prototype.find = function(id/* number*/) {
 	// body...
 	var id = this.name +"."+ parseInt(id, 10);
 
@@ -141,7 +150,7 @@ ls.prototype.find = function(id/* number*/) {
 	return null;
 };
 
-ls.prototype.findAll = function(from/*number optional*/, to/* number optional*/) {
+_ls.prototype.findAll = function(from/*number optional*/, to/* number optional*/) {
 	// body...
 	var records = [];
 	var length = parseInt(localStorage.getItem(this.name+ ".ids"));
@@ -181,7 +190,7 @@ ls.prototype.findAll = function(from/*number optional*/, to/* number optional*/)
 	return records;
 };
 
-ls.prototype.remove = function(id /* number*/) {
+_ls.prototype.remove = function(id /* number*/) {
 	var id = this.name +"."+ parseInt(id, 10);
 	if(itemExists(id)) {
 		localStorage.removeItem(id);
@@ -192,7 +201,7 @@ ls.prototype.remove = function(id /* number*/) {
 	return false;
 };
 
-ls.prototype.firstPage = function(number/*size of the records to be returned*/) {
+_ls.prototype.firstPage = function(number/*size of the records to be returned*/) {
 	if(number > 0 && number !== NaN) {
 	this.recordsPerPage = number;
 	this.page = 1;
@@ -203,7 +212,7 @@ ls.prototype.firstPage = function(number/*size of the records to be returned*/) 
 	//return this.recordsPerPage;
 };
 
-ls.prototype.nextPage = function() {
+_ls.prototype.nextPage = function() {
 	// body...
 	if(!this.page) {
 		console.log('firstPage method must be called first');
@@ -215,7 +224,7 @@ ls.prototype.nextPage = function() {
 	this.page++;
 };
 
-ls.prototype.prevPage = function() {
+_ls.prototype.prevPage = function() {
 	// body...
 	if(!this.page) {
 		console.log('firstPage method must be called first and nextPage ');
@@ -246,6 +255,7 @@ ls.prototype.prevPage = function() {
 // get the uid 
 // returns a unique identifier (by way of Backbone.localStorage.js)
 // TODO investigate smaller UUIDs to cut on storage cost
+// why this is required ??
 function getUID () {
         var S4 = function () {
             return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
@@ -255,7 +265,7 @@ function getUID () {
 }
 
 function itemExists(itemName) {
-	if(localStorage.getItem(itemName) != undefined) {
+	if(localStorage.getItem(itemName) !== undefined) {
 		return true;
 	} else {
 		return false;
@@ -268,11 +278,12 @@ Dabba.help = (function(){
 
 	return {
 
-	version: "0.1.1a"
+	version: "0.1.1a.2"
 	//public API
-	,create: init//function(name, keys){ init(name, keys); }
+	,create: _create//function(name, keys){ init(name, keys); }
 	,modify: ''// add or remove key and corresponding values
 	,destroy: ''
+	,reset: ''
 	,has: itemExists
 	,toJSON: ''
 	,replicate: ''
